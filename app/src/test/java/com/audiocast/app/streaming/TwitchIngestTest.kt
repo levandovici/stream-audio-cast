@@ -26,7 +26,7 @@ class TwitchIngestTest {
     @Test
     fun `blank server falls back to default`() {
         assertEquals(
-            "rtmp://live.twitch.tv/app/k",
+            "${TwitchIngest.DEFAULT_SERVER}/k",
             TwitchIngest.buildEndpoint("   ", "k")
         )
     }

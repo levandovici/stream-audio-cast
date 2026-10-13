@@ -169,6 +169,30 @@ class AudioCastViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /** Removes the selected banner. Falls back to the branded default frame,
+     * including live while streaming. */
+    fun clearBanner() {
+        val old = _banner.value
+        _banner.value = null
+        viewModelScope.launch {
+            settings.setBannerUri(null)
+            old?.let {
+                if (!it.source.isRecycled) it.source.recycle()
+                if (!it.previewFrame.isRecycled) it.previewFrame.recycle()
+            }
+            // If live, swap the outgoing frame to the default banner now.
+            val active = controller.activeConfig
+            if (old != null && controller.status.value.isActive &&
+                controller.acceptsBannerUpdates() && active != null) {
+                val frame = withContext(Dispatchers.Default) {
+                    DefaultBanner.render(active.width, active.height)
+                }
+                controller.updateBanner(frame)
+            }
+            if (old != null) _message.value = "Cover removed — branded banner will be used"
+        }
+    }
+
     /** Recompose the output frame after orientation/fit-mode changes. */
     private suspend fun recomposeFrame() {
         val b = _banner.value ?: return

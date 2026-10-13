@@ -82,12 +82,14 @@ class BannerDecoderTest {
     }
 
     @Test
-    fun fitModeLeavesBlackBars() {
-        // 2:1 red image in a 16:9 frame: top and bottom rows stay black.
+    fun fitModeFillsBarsWithDimmedBackdrop() {
+        // 2:1 red image in a 16:9 frame: bars show a dimmed blurred copy of
+        // the image (dark red), never pure black or undistorted content.
         val src = Bitmap.createBitmap(200, 100, Bitmap.Config.ARGB_8888)
         src.eraseColor(android.graphics.Color.RED)
         val frame = FrameComposer.compose(src, 1280, 720, FitMode.FIT)
-        assertEquals(android.graphics.Color.BLACK, frame.getPixel(640, 5))
+        val barPixel = frame.getPixel(640, 5)
+        assertTrue(android.graphics.Color.red(barPixel) in 1..200)
         assertEquals(android.graphics.Color.RED, frame.getPixel(640, 360))
         src.recycle(); frame.recycle()
     }

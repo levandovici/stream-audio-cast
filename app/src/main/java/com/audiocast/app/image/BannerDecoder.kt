@@ -5,10 +5,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import com.audiocast.app.data.FitMode
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 /**
@@ -81,11 +84,21 @@ object BannerDecoder {
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
         return try {
-            val bitmap = resolver.openInputStream(uri)?.use {
+            val raw = resolver.openInputStream(uri)?.use {
                 BitmapFactory.decodeStream(it, null, opts)
             }
-            if (bitmap != null) DecodeResult.Success(bitmap)
-            else DecodeResult.Failure("The image could not be decoded")
+            if (raw == null) return DecodeResult.Failure("The image could not be decoded")
+            // Photos often store orientation only in EXIF; honor it so a
+            // portrait shot is not streamed sideways.
+            val orientation = runCatching {
+                resolver.openInputStream(uri)?.use {
+                    ExifInterface(it).getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_NORMAL,
+                    )
+                }
+            }.getOrNull() ?: ExifInterface.ORIENTATION_NORMAL
+            DecodeResult.Success(applyExifOrientation(raw, orientation))
         } catch (e: OutOfMemoryError) {
             DecodeResult.Failure("The image is too large for this device")
         } catch (e: Exception) {
@@ -93,6 +106,26 @@ object BannerDecoder {
                 "The image could not be decoded (${e.javaClass.simpleName}: ${e.message})"
             )
         }
+    }
+
+    /** Rotates/mirrors [bitmap] according to the EXIF orientation flag. */
+    private fun applyExifOrientation(bitmap: Bitmap, orientation: Int): Bitmap {
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.setScale(-1f, 1f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.setRotate(180f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.setRotate(180f).also { matrix.postScale(-1f, 1f) }
+            ExifInterface.ORIENTATION_TRANSPOSE -> matrix.setRotate(90f).also { matrix.postScale(-1f, 1f) }
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.setRotate(90f)
+            ExifInterface.ORIENTATION_TRANSVERSE -> matrix.setRotate(-90f).also { matrix.postScale(-1f, 1f) }
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.setRotate(-90f)
+            else -> return bitmap
+        }
+        val rotated = Bitmap.createBitmap(
+            bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+        )
+        if (rotated !== bitmap) bitmap.recycle()
+        return rotated
     }
 
     /** Testable overload that works on a raw stream. */
@@ -117,9 +150,15 @@ object BannerDecoder {
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
         return try {
-            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
-            if (bitmap != null) DecodeResult.Success(bitmap)
-            else DecodeResult.Failure("The image could not be decoded")
+            val raw = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+                ?: return DecodeResult.Failure("The image could not be decoded")
+            val orientation = runCatching {
+                ExifInterface(ByteArrayInputStream(bytes)).getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL,
+                )
+            }.getOrDefault(ExifInterface.ORIENTATION_NORMAL)
+            DecodeResult.Success(applyExifOrientation(raw, orientation))
         } catch (e: OutOfMemoryError) {
             DecodeResult.Failure("The image is too large for this device")
         }
@@ -141,11 +180,15 @@ object FrameComposer {
 
     private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
 
+    /** Darkening applied over the blurred backdrop so the image stays readable. */
+    private const val BACKDROP_DIM = 0x99000000.toInt()
+
     fun compose(source: Bitmap, outWidth: Int, outHeight: Int, mode: FitMode): Bitmap {
         val result = FrameGeometry.compute(source.width, source.height, outWidth, outHeight, mode)
         val frame = Bitmap.createBitmap(outWidth, outHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(frame)
         canvas.drawColor(android.graphics.Color.BLACK)
+        if (mode == FitMode.FIT) drawBlurredBackdrop(canvas, source, outWidth, outHeight)
         canvas.drawBitmap(
             source,
             Rect(result.src.left, result.src.top, result.src.right, result.src.bottom),
@@ -153,5 +196,31 @@ object FrameComposer {
             paint,
         )
         return frame
+    }
+
+    /**
+     * Fills the frame with a heavily downscaled (therefore blurred) copy of
+     * the image stretched to cover, dimmed underneath the sharp FIT image.
+     * Only affects empty letterbox/pillarbox areas - the image itself is
+     * still drawn whole and undistorted on top.
+     */
+    private fun drawBlurredBackdrop(canvas: Canvas, source: Bitmap, outW: Int, outH: Int) {
+        // ~24px on the short edge is enough for a soft blur once upscaled.
+        val ratio = source.width.toFloat() / source.height
+        val (tw, th) = if (ratio >= 1f) {
+            (24f * ratio).toInt().coerceAtLeast(8) to 24
+        } else {
+            24 to (24f / ratio).toInt().coerceAtLeast(8)
+        }
+        val tiny = Bitmap.createScaledBitmap(source, tw, th, true)
+        val fill = FrameGeometry.compute(tw, th, outW, outH, FitMode.FILL)
+        canvas.drawBitmap(
+            tiny,
+            Rect(fill.src.left, fill.src.top, fill.src.right, fill.src.bottom),
+            Rect(0, 0, outW, outH),
+            paint,
+        )
+        tiny.recycle()
+        canvas.drawColor(BACKDROP_DIM)
     }
 }

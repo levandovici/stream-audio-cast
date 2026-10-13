@@ -52,6 +52,7 @@ fun SettingsScreen(
     val config by viewModel.config.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val hasKey by viewModel.hasSavedKey.collectAsStateWithLifecycle()
+    val banner by viewModel.banner.collectAsStateWithLifecycle()
     var ingestInput by rememberSaveable { mutableStateOf<String?>(null) }
 
     val locked = status.isActive
@@ -130,6 +131,22 @@ fun SettingsScreen(
                 ) {
                     Text("Stereo", style = MaterialTheme.typography.bodyMedium)
                     Switch(checked = config.stereo, onCheckedChange = viewModel::setStereo)
+                }
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        banner?.displayName?.let { "Cover: $it" } ?: "Cover: default banner",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(
+                        onClick = viewModel::clearBanner,
+                        enabled = banner != null,
+                    ) { Text("Remove cover") }
                 }
             }
         }

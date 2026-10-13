@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.navigation.compose)
 
     implementation(libs.datastore.preferences)
+    implementation(libs.exifinterface)
 
     // RTMP streaming (RootEncoder) - provides RtmpStream, BitmapSource-style
     // video sources, MicrophoneSource, MediaCodec encoders and the RTMP client.
