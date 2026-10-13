@@ -64,6 +64,7 @@ fun StudioScreen(
 ) {
     val context = LocalContext.current
     val banner by viewModel.banner.collectAsStateWithLifecycle()
+    val defaultFrame by viewModel.defaultFrame.collectAsStateWithLifecycle()
     val config by viewModel.config.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
     val level by viewModel.audioLevel.collectAsStateWithLifecycle()
@@ -141,7 +142,8 @@ fun StudioScreen(
 
         // WYSIWYG preview: the exact frame going to the encoder.
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            banner?.let { BannerPreview(it.previewFrame, config.orientation) }
+            val frame = banner?.previewFrame ?: defaultFrame
+            frame?.let { BannerPreview(it, config.orientation) }
                 ?: Card(
                     modifier = Modifier
                         .fillMaxWidth()

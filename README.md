@@ -1,6 +1,6 @@
-# AudioCast — Static-Image Audio Streaming for Twitch
+# Stream Audio Cast — Static-Image Audio Streaming for Twitch
 
-AudioCast is a native Android app that livestreams **microphone audio** to
+Stream Audio Cast is a native Android app that livestreams **microphone audio** to
 Twitch over RTMP while the outgoing video track is generated entirely from a
 **single static image** you pick from your device.
 
@@ -13,7 +13,7 @@ audio or video recordings. See [Privacy](#privacy).
 
 ## Features
 
-- Twitch RTMP ingest (default `rtmp://live.twitch.tv/app`), configurable server
+- Twitch RTMP ingest (default `rtmp://ingest.global-contribute.live-video.net/app`), configurable server
 - Stream key encrypted at rest with Android Keystore (AES-256/GCM); never logged
 - Banner picker via the Storage Access Framework — PNG / JPEG / WebP
 - Any image size or aspect ratio is accepted and auto-scaled

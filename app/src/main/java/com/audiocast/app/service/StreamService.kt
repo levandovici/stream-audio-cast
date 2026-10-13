@@ -43,6 +43,12 @@ class StreamService : Service() {
                 stopStreamingAndSelf()
                 return START_NOT_STICKY
             }
+            ACTION_MUTE -> {
+                val c = controller()
+                c.setMuted(!c.status.value.muted)
+                updateNotification(c.status.value)
+                return START_STICKY
+            }
             ACTION_UPDATE -> {
                 updateNotification(controller().status.value)
                 return START_STICKY
@@ -141,14 +147,20 @@ class StreamService : Service() {
             Intent(this, StreamService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+        val muteIntent = PendingIntent.getService(
+            this, 2,
+            Intent(this, StreamService::class.java).setAction(ACTION_MUTE),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         val title = when (status.state) {
-            StreamController.State.LIVE -> "AudioCast is live"
-            StreamController.State.RECONNECTING -> "AudioCast reconnecting…"
+            StreamController.State.LIVE ->
+                if (status.muted) "Stream Audio Cast is live (muted)" else "Stream Audio Cast is live"
+            StreamController.State.RECONNECTING -> "Stream Audio Cast reconnecting…"
             StreamController.State.CONNECTING, StreamController.State.PREPARING ->
-                "AudioCast connecting…"
-            StreamController.State.STOPPING -> "AudioCast stopping…"
-            StreamController.State.ERROR -> "AudioCast stream error"
-            StreamController.State.DISCONNECTED -> "AudioCast stopped"
+                "Stream Audio Cast connecting…"
+            StreamController.State.STOPPING -> "Stream Audio Cast stopping…"
+            StreamController.State.ERROR -> "Stream Audio Cast stream error"
+            StreamController.State.DISCONNECTED -> "Stream Audio Cast stopped"
         }
         val text = when (status.state) {
             StreamController.State.LIVE -> "Streaming ${status.bitrateKbps} kbps to Twitch"
@@ -162,6 +174,7 @@ class StreamService : Service() {
             .setContentIntent(openIntent)
             .setOngoing(status.isActive)
             .setOnlyAlertOnce(true)
+            .addAction(0, if (status.muted) "Unmute" else "Mute", muteIntent)
             .addAction(0, "Stop", stopIntent)
             .build()
     }
@@ -170,6 +183,7 @@ class StreamService : Service() {
         const val ACTION_START = "com.audiocast.app.action.START"
         const val ACTION_STOP = "com.audiocast.app.action.STOP"
         const val ACTION_UPDATE = "com.audiocast.app.action.UPDATE"
+        const val ACTION_MUTE = "com.audiocast.app.action.MUTE"
         private const val CHANNEL_ID = "audiocast_streaming"
         private const val NOTIFICATION_ID = 0xA0C1
         private const val WAKELOCK_TAG = "audiocast:stream"

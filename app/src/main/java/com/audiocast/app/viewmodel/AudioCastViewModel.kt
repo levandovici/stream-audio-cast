@@ -14,6 +14,7 @@ import com.audiocast.app.data.FitMode
 import com.audiocast.app.data.StreamConfig
 import com.audiocast.app.data.StreamOrientation
 import com.audiocast.app.image.BannerDecoder
+import com.audiocast.app.image.DefaultBanner
 import com.audiocast.app.image.FrameComposer
 import com.audiocast.app.service.StreamService
 import com.audiocast.app.streaming.StreamController
@@ -57,6 +58,10 @@ class AudioCastViewModel(application: Application) : AndroidViewModel(applicatio
     private val _banner = MutableStateFlow<BannerState?>(null)
     val banner: StateFlow<BannerState?> = _banner.asStateFlow()
 
+    /** Branded default frame shown/streamed when no image is picked. */
+    private val _defaultFrame = MutableStateFlow<Bitmap?>(null)
+    val defaultFrame: StateFlow<Bitmap?> = _defaultFrame.asStateFlow()
+
     private val _hasSavedKey = MutableStateFlow(false)
     val hasSavedKey: StateFlow<Boolean> = _hasSavedKey.asStateFlow()
 
@@ -66,6 +71,16 @@ class AudioCastViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         _hasSavedKey.value = keyStore.hasStreamKey()
+        // Keep a branded default frame ready for the current orientation.
+        viewModelScope.launch {
+            config.collect { cfg ->
+                val old = _defaultFrame.value
+                _defaultFrame.value = withContext(Dispatchers.Default) {
+                    DefaultBanner.render(cfg.width, cfg.height)
+                }
+                if (old != null && !old.isRecycled) old.recycle()
+            }
+        }
         // Restore the previously selected banner while permission is held.
         viewModelScope.launch {
             settings.bannerUri.stateIn(viewModelScope).collect { stored ->
@@ -180,11 +195,6 @@ class AudioCastViewModel(application: Application) : AndroidViewModel(applicatio
      * UI layer so a rationale can be shown).
      */
     fun startStream() {
-        val b = _banner.value
-        if (b == null) {
-            _message.value = "Choose a banner image first"
-            return
-        }
         val key = keyStore.getStreamKey()
         if (key.isNullOrEmpty()) {
             _message.value = "Save your Twitch stream key first"
@@ -193,8 +203,11 @@ class AudioCastViewModel(application: Application) : AndroidViewModel(applicatio
         val cfg = config.value
         viewModelScope.launch {
             // Fresh frame for the encoder; the source owns it from here.
+            // Falls back to the branded default banner when nothing is picked.
+            val b = _banner.value
             val frame = withContext(Dispatchers.Default) {
-                FrameComposer.compose(b.source, cfg.width, cfg.height, cfg.fitMode)
+                if (b != null) FrameComposer.compose(b.source, cfg.width, cfg.height, cfg.fitMode)
+                else DefaultBanner.render(cfg.width, cfg.height)
             }
             ContextCompat.startForegroundService(
                 app, StreamService.startIntent(app)

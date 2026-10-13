@@ -65,6 +65,7 @@ fun SetupScreen(
     onContinue: () -> Unit,
 ) {
     val banner by viewModel.banner.collectAsStateWithLifecycle()
+    val defaultFrame by viewModel.defaultFrame.collectAsStateWithLifecycle()
     val config by viewModel.config.collectAsStateWithLifecycle()
     val hasKey by viewModel.hasSavedKey.collectAsStateWithLifecycle()
 
@@ -83,7 +84,7 @@ fun SetupScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-            Text("AudioCast", style = MaterialTheme.typography.headlineLarge)
+            Text("Stream Audio Cast", style = MaterialTheme.typography.headlineLarge)
             Text(
                 "Static image + live audio to Twitch",
                 style = MaterialTheme.typography.bodyMedium,
@@ -149,13 +150,17 @@ fun SetupScreen(
                         Text(it, style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                } ?: Text(
-                    "Pick any image from your device. It becomes the video of your " +
-                        "stream; empty areas are black. The image never leaves your device " +
-                        "except inside the Twitch stream itself.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                } ?: run {
+                    defaultFrame?.let { BannerPreview(it, config.orientation) }
+                    Text(
+                        "Optional: pick any image from your device and it becomes the " +
+                            "video of your stream — empty areas are black. Without one, " +
+                            "the branded Stream Audio Cast banner above is streamed. " +
+                            "The image never leaves your device except in the stream.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 OutlinedButton(onClick = {
                     picker.launch(arrayOf("image/png", "image/jpeg", "image/webp"))
                 }) {
@@ -223,13 +228,13 @@ fun SetupScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = hasKey && banner != null,
+            enabled = hasKey,
         ) {
             Text("Continue to Stream Studio", textAlign = TextAlign.Center)
         }
-        if (!hasKey || banner == null) {
+        if (!hasKey) {
             Text(
-                "Save your stream key and choose a banner to continue.",
+                "Save your stream key to continue.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth(),

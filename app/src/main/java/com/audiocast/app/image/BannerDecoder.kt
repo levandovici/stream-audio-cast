@@ -20,20 +20,14 @@ object BannerDecoder {
     /** Decoded source images are downsampled beyond this edge for safety. */
     const val MAX_DECODE_DIMENSION = 4096
 
-    private val SUPPORTED_MIME = setOf(
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-    )
-
     sealed class DecodeResult {
         data class Success(val bitmap: Bitmap) : DecodeResult()
         data class Failure(val reason: String) : DecodeResult()
     }
 
+    /** Any image/… type is accepted; the decoder validates the actual bytes. */
     fun isSupportedMimeType(mime: String?): Boolean =
-        mime?.lowercase() in SUPPORTED_MIME
+        mime == null || mime.lowercase().startsWith("image/")
 
     fun mimeTypeFor(context: Context, uri: Uri): String? =
         context.contentResolver.getType(uri)
@@ -50,15 +44,29 @@ object BannerDecoder {
     ): DecodeResult {
         val mime = resolver.getType(uri)
         if (mime != null && !isSupportedMimeType(mime)) {
-            return DecodeResult.Failure("Unsupported image type: $mime")
+            return DecodeResult.Failure("Unsupported file type: $mime")
         }
 
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         try {
-            resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
-                ?: return DecodeResult.Failure("Could not open the selected image")
+            val opened = resolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, bounds); true
+            } ?: false
+            if (!opened) {
+                return DecodeResult.Failure(
+                    "The image provider did not allow reading this file " +
+                        "(mime=${mime ?: "unknown"}). Try a different file or folder."
+                )
+            }
+        } catch (e: SecurityException) {
+            return DecodeResult.Failure(
+                "Read permission was denied for this file. Pick it again or " +
+                    "choose a file from local storage."
+            )
         } catch (e: Exception) {
-            return DecodeResult.Failure("Could not open the selected image")
+            return DecodeResult.Failure(
+                "Could not open the selected image (${e.javaClass.simpleName}: ${e.message})"
+            )
         }
 
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
@@ -81,7 +89,9 @@ object BannerDecoder {
         } catch (e: OutOfMemoryError) {
             DecodeResult.Failure("The image is too large for this device")
         } catch (e: Exception) {
-            DecodeResult.Failure("The image could not be decoded")
+            DecodeResult.Failure(
+                "The image could not be decoded (${e.javaClass.simpleName}: ${e.message})"
+            )
         }
     }
 

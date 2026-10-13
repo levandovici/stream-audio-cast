@@ -6,7 +6,8 @@ package com.audiocast.app.streaming
  */
 object TwitchIngest {
 
-    const val DEFAULT_SERVER = "rtmp://live.twitch.tv/app"
+    /** Endpoint Twitch publishes at ingest.twitch.tv/ingests as the global default. */
+    const val DEFAULT_SERVER = "rtmp://ingest.global-contribute.live-video.net/app"
     const val MASK = "***"
 
     fun normalizeServer(server: String): String {

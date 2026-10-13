@@ -232,14 +232,14 @@ fun SettingsScreen(
                         "stream, and only sent to Twitch.\n" +
                         "• Banner images stay on this device; they are only encoded into " +
                         "the outgoing stream.\n" +
-                        "• AudioCast never records your screen, never uses your camera " +
-                        "and never saves audio or video recordings.\n" +
+                        "• Stream Audio Cast never records your screen, never uses your " +
+                        "camera and never saves audio or video recordings.\n" +
                         "• No analytics, no tracking, no third-party data collection.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "AudioCast 1.0.0",
+                    "Stream Audio Cast 1.0.0",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -1,5 +1,7 @@
 package com.audiocast.app.data
 
+import com.audiocast.app.streaming.TwitchIngest
+
 /** Output orientation of the encoded video track. */
 enum class StreamOrientation(val width: Int, val height: Int, val label: String) {
     LANDSCAPE(1280, 720, "Horizontal 1280×720"),
@@ -33,7 +35,7 @@ data class StreamConfig(
     val audioQuality: AudioQuality = AudioQuality.HIGH,
     val sampleRate: Int = 48_000,
     val stereo: Boolean = false,
-    val ingestServer: String = "rtmp://live.twitch.tv/app",
+    val ingestServer: String = TwitchIngest.DEFAULT_SERVER,
     val maxReconnectAttempts: Int = 8,
     val socketTimeoutMs: Long = 5_000,
 ) {

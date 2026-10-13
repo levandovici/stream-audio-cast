@@ -180,7 +180,9 @@ class StreamController(
         // The library's internal retry allowance is left unbounded; the app's
         // own ReconnectPolicy decides when to give up.
         client.setReTries(Int.MAX_VALUE)
-        client.setCheckServerAlive(true)
+        // checkServerAlive falsely reports "No response from server" on some
+        // ingests (RootEncoder issue #1924); socket errors still surface.
+        client.setCheckServerAlive(false)
         client.shouldSendPings(true)
         rtmp.setEncoderErrorCallback(codecErrorCallback)
 
