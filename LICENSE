@@ -1,0 +1,82 @@
+STREAM AUDIO CAST — PROPRIETARY LICENSE
+========================================
+
+Copyright (c) 2026 Nichita Levandovici. All rights reserved.
+
+1. DEFINITIONS
+
+   "Software" means the Stream Audio Cast Android application, including its
+   binaries, source code, assets, branding and documentation.
+
+   "Licensor" means the copyright holder listed above.
+
+   "You" means any individual or entity downloading, installing or using the
+   Software.
+
+2. GRANT OF USE
+
+   The Licensor grants You a non-exclusive, non-transferable, royalty-free
+   license to install and use the Software to produce and broadcast live
+   streams for both COMMERCIAL and NON-COMMERCIAL purposes, subject to the
+   restrictions below.
+
+3. PERMITTED USES
+
+   You may use the Software to:
+
+   a) Stream audio and video content to Twitch or compatible RTMP services;
+   b) Monetize your own streams (subscriptions, ads, donations, sponsorships)
+      where the streamed content itself complies with Section 4;
+   c) Use the Software on any number of devices You own or control.
+
+4. PROHIBITED USES
+
+   You may NOT use the Software to produce, promote, advertise or facilitate
+   content or activity involving:
+
+   a) Alcohol or alcoholic beverages;
+   b) Tobacco products, cigarettes, vaping or nicotine products;
+   c) Gambling, casinos, betting or lotteries;
+   d) Cryptocurrency scams, fraudulent investment schemes, or any deceptive
+      or fraudulent marketing or streaming practices;
+   e) War, armed conflict, weapons promotion, or glorification of violence;
+   f) Hate speech, harassment, discrimination, or exploitation of any person;
+   g) Any illegal goods, services or activities under applicable law;
+   h) Any content intended to harm, deceive or endanger people — in short,
+      uses that are bad for humanity.
+
+5. RESTRICTIONS ON THE SOFTWARE ITSELF
+
+   Except where prohibited by law, You may not:
+
+   a) Copy, redistribute, sell, rent, lease or sublicense the Software or
+      modified versions of it without prior written permission;
+   b) Remove or alter copyright notices, branding or license terms;
+   c) Reverse engineer the Software except as permitted by mandatory law.
+
+6. INTELLECTUAL PROPERTY
+
+   The Software is licensed, not sold. The Licensor retains all rights,
+   title and interest in and to the Software, including all intellectual
+   property rights. The "Stream Audio Cast" name and branding may not be
+   used for derivative or competing products without written permission.
+
+7. PRIVACY
+
+   The Software does not collect, transmit or sell your data. Your stream
+   key is stored encrypted on your device and is sent only to the streaming
+   endpoint you configure.
+
+8. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. THE LICENSOR SHALL
+   NOT BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE
+   USE OF THE SOFTWARE.
+
+9. TERMINATION
+
+   This license terminates automatically if You breach any term, including
+   the Prohibited Uses in Section 4. Upon termination You must cease all
+   use of the Software and delete all copies in your possession.
