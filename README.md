@@ -13,7 +13,7 @@ audio or video recordings. See [Privacy](#privacy).
 
 ## Features
 
-- Twitch RTMP ingest (default `rtmp://ingest.global-contribute.live-video.net/app`), configurable server
+- Twitch RTMP ingest (default `rtmps://ingest.global-contribute.live-video.net/app`), configurable server
 - Stream key encrypted at rest with Android Keystore (AES-256/GCM); never logged
 - Banner picker via the Storage Access Framework — PNG / JPEG / WebP
 - Any image size or aspect ratio is accepted and auto-scaled
@@ -123,7 +123,8 @@ Instrumented tests (device/emulator needed): `./gradlew connectedDebugAndroidTes
 - **Internal/playback audio** (capturing other apps' sound) is not included in
   this release — Android restricts it heavily; the mic path is the reliable
   baseline.
-- RTMP is unencrypted TCP (`rtmps://` endpoints work if your ingest supports
-  TLS; Twitch's public ingest is `rtmp://`).
+- The default ingest is RTMPS (TLS over port 443). Plain `rtmp://` endpoints
+  are still accepted in Settings, but mobile carriers frequently tamper with
+  port 1935 — the socket opens, then the handshake dies mid-flight.
 - Reconnect resumes the same RTMP session; Twitch may take a few seconds to
   show the stream as healthy again after a network flap.

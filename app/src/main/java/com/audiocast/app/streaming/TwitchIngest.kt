@@ -6,8 +6,12 @@ package com.audiocast.app.streaming
  */
 object TwitchIngest {
 
-    /** Endpoint Twitch publishes at ingest.twitch.tv/ingests as the global default. */
-    const val DEFAULT_SERVER = "rtmp://ingest.global-contribute.live-video.net/app"
+    /**
+     * Twitch's global ingest, RTMPS on 443. Plain RTMP on 1935 is frequently
+     * tampered with by mobile carriers and middleboxes — the socket opens
+     * but the handshake dies mid-flight ("end of stream").
+     */
+    const val DEFAULT_SERVER = "rtmps://ingest.global-contribute.live-video.net/app"
     const val MASK = "***"
 
     fun normalizeServer(server: String): String {
